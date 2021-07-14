@@ -1,0 +1,139 @@
+version: "2"
+services:
+  rabbitmq_tds:
+    image: rabbitmq:3-management-alpine
+    ports:
+      - 5672:5672 #host:container
+      - 15672:15672
+    volumes:
+      - ./rabbitmq/data/:/var/lib/rabbitmq
+      - ./rabbitmq/log/:/var/log/rabbitmq
+    environment:
+      RABBITMQ_USERNAME: guest
+      RABBITMQ_PASSWORD: guest
+    networks:
+      todoist_net:
+        ipv4_address: 10.5.0.2
+  postgres_tds:
+    image: postgres
+    environment:
+      POSTGRES_USER: root
+      POSTGRES_DB: todoist_db
+      POSTGRES_PASSWORD: 123456
+      PGDATA: /tmp
+    volumes:
+      - ./pgdata:/var/lib/postgresql/data
+    ports:
+      - 5432:5432
+    networks:
+      todoist_net:
+        ipv4_address: 10.5.0.3
+  redis_tds:
+    image: "redis"
+    networks:
+      todoist_net:
+        ipv4_address: 10.5.0.4
+  mongodb_tds:
+    image: mongo:bionic
+    environment:
+      MONGO_INITDB_DATABASE: todoist_db
+    volumes:
+      - ./mongodata:/data/db
+    ports:
+      - 27010:27010
+    networks:
+      todoist_net:
+        ipv4_address: 10.5.0.5
+    restart: unless-stopped
+  minio1_tds:
+    image: minio/minio:RELEASE.2021-05-27T22-06-31Z
+    volumes:
+      - ./miniodata/:/data
+    ports:
+      - 9000:9000
+    environment:
+      MINIO_ROOT_USER: minio
+      MINIO_ROOT_PASSWORD: minio123
+    networks:
+      todoist_net:
+        ipv4_address: 10.5.0.6
+    command: server /data
+  users_tds:
+    build: todoist-user/.
+    depends_on:
+      - postgres_tds
+      - rabbitmq_tds
+    volumes:
+      - ./usersVol:/usr/src/myapp
+    ports:
+      - 8082:8080
+    networks:
+      todoist_net:
+        ipv4_address: 10.5.0.7
+  tasks_tds:
+    build: todoist-tasks/.
+    depends_on:
+      - minio1_tds
+      - mongodb_tds
+      - redis_tds
+      - rabbitmq_tds
+    volumes:
+      - ./tasksVol:/usr/src/myapp
+    ports:
+      - 8083:8080
+    networks:
+      todoist_net:
+        ipv4_address: 10.5.0.8
+  chat_tds:
+    build: todoist-chat/.
+    depends_on:
+      - minio1_tds
+      - mongodb_tds
+      - rabbitmq_tds
+    volumes:
+      - ./chatVol:/usr/src/myapp
+    ports:
+      - 8084:8080
+    networks:
+      todoist_net:
+        ipv4_address: 10.5.0.9
+  reports_tds:
+    build: todoist-reports/.
+    depends_on:
+      - mongodb_tds
+      - rabbitmq_tds
+    volumes:
+      - ./reportsVol:/usr/src/myapp
+    ports:
+      - 8085:8080
+    networks:
+      todoist_net:
+        ipv4_address: 10.5.0.10
+  # controller_tds:
+  #   build: controller/.
+  #   volumes:
+  #     - ./controllerVol:/usr/src/myapp
+  #   ports:
+  #     - 8086:8080
+  #   networks:
+  #     todoist_net:
+  #       ipv4_address: 10.5.0.11
+  netty_tds:
+    build: server/.
+    depends_on:
+      - rabbitmq_tds
+    volumes:
+      - ./nettyVol:/usr/src/myapp
+    ports:
+      - 8087:8080
+    networks:
+      todoist_net:
+        ipv4_address: 10.5.0.12
+
+networks:
+  todoist_net:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.5.0.0/16
+          gateway: 10.5.0.1

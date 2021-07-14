@@ -1,0 +1,12 @@
+.project
+/.metadata/
+/rabbitmq/
+/miniodata/
+/mongodata/
+/pgdata/
+/usersVol/
+/tasksVol/
+/nettyVol/
+/reportsVol/
+/chatVol/
+/controllerVol/

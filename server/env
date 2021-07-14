@@ -1,0 +1,14 @@
+USER_QUEUE_RECV=users-recv
+USER_QUEUE_SEND=users-send
+TASK_QUEUE_RECV=tasks-recv
+TASK_QUEUE_SEND=tasks-send
+REPORT_QUEUE_RECV=reports-recv
+REPORT_QUEUE_SEND=reports-send
+CHAT_QUEUE_RECV=chat-recv
+CHAT_QUEUE_SEND=chat-send
+QUEUE_HOST=10.5.0.2
+QUEUE_USERNAME=guest
+QUEUE_PASSWORD=guest
+QUEUE_PORT=5672
+NETTY_PORT=8080
+SECRET=should_be_very_long_and_random
